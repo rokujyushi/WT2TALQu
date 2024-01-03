@@ -12,3 +12,25 @@ TALQuPRO is available from the developer Haruqa's
 このプラグインはTALQu3PROで動作します。  
 TALQuPROは、開発者のHaruqaさんの  
 [FanBox](https://haruqa.fanbox.cc/)(有料)または、[はるぽラボ](https://haruqa.github.io/TALQu/community.html)(ポイント制)から入手できます。  
+
+
+# Use
+![image](https://github.com/rokujyushi/WT2TALQu/assets/93469977/91da2026-760a-45b7-96a8-14db455b9712)  
+
+Before activating the plugin  
+Set the path to TALQuClient in General  
+
+プラグインを有効化する前に  
+GeneralでTALQuClientのパスを設定しましょう。  
+
+![image](https://github.com/rokujyushi/WT2TALQu/assets/93469977/28517e00-e8e3-472a-b57e-db5ad918843f)
+
+In Settings, you can make changes to the settings during speech synthesis.  
+The split_string_num setting limits the number of characters sent when using the TALQu2 model.  
+
+Settingsでは、音声合成時の設定の変更を加えることができます。  
+split_string_numはTALQu2モデルを利用時に送信する文字数を制限する設定になります。  
+
+**The reason for limiting the number of characters is that it may not be possible to synthesize or the synthesis may take too long.**  
+
+**文字数を制限する理由は合成出来ない場合や合成に時間がかかりすぎてしまうためです。**  
