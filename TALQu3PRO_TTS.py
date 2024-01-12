@@ -1,6 +1,6 @@
 # ============================================================
 # TALQu3PRO Text to Speech Plugin for Whispering Tiger
-# Version: 0.1.0
+# Version: 0.2.0
 # This plug-in works with TALQu3PRO.
 # TALQuPRO is available from the developer Haruqa's
 # FanBox or join HarupoLabo to get it.
@@ -35,6 +35,7 @@ class TALQu3PROTTSPlugin(Plugins.Base):
     TALQu_path = ""
     action_flag = False
     data = {}
+    target_sample_rate = 48000
 
     def init(self):
 
@@ -42,7 +43,7 @@ class TALQu3PROTTSPlugin(Plugins.Base):
         self.init_plugin_settings(
             {
                 "talqu_path": {"type": "file_open", "accept": ".exe", "value": ""},
-                "play_mode":{"type": "select", "value": "", "values": ["onry","true",""]},
+                "play_mode":{"type": "select", "value": "", "values": ["onry","true","false"]},
                 "speed":{"type": "slider", "min": 50, "max": 200, "step": 1, "value": 100},
                 "inflection":{"type": "slider", "min": 0, "max": 2, "step": 0.001, "value": 1},
                 "pitch_model":{"type": "slider", "min": 0.5, "max": 2, "step": 0.001, "value": 1},
@@ -53,10 +54,11 @@ class TALQu3PROTTSPlugin(Plugins.Base):
                 "refine":{"type": "select", "value": "False", "values": ["True","False"]},
                 "model_load_btn": {"label": "Load model", "type": "button", "style": "primary"},
                 "split_string_num": {"type": "slider", "min": 0, "max": 30, "step": 1, "value": 10},
+                "wait_time": {"type": "slider", "min": 0, "max": 20, "step": 1, "value": 5},
             },
             settings_groups={
                 "General": ["talqu_path","play_mode","model_load_btn"],
-                "Settings": ["speed", "inflection", "pitch_model", "small_pauses", "large_pauses", "pitch", "formant", "refine","split_string_num"],
+                "Settings": ["speed", "inflection", "pitch_model", "small_pauses", "large_pauses", "pitch", "formant", "refine","split_string_num","wait_time"],
             }
         )
         self.TALQu_path = self.get_plugin_setting("talqu_path", "")
@@ -128,13 +130,30 @@ class TALQu3PROTTSPlugin(Plugins.Base):
                 if message["type"] == "plugin_button_press":
                     if message["value"] == "model_load_btn":
                         self.load_model()
+
+    def play_audio_on_device(self, wav, audio_device, source_sample_rate=24000, audio_device_channel_num=2, target_channels=2, is_mono=True, dtype="int16"):
+        secondary_audio_device = None
+        if settings.GetOption("tts_use_secondary_playback") and (
+                (settings.GetOption("tts_secondary_playback_device") == -1 and audio_device != settings.GetOption("device_default_out_index")) or
+                (settings.GetOption("tts_secondary_playback_device") > -1 and audio_device != settings.GetOption("tts_secondary_playback_device"))):
+            secondary_audio_device = settings.GetOption("tts_secondary_playback_device")
+            if secondary_audio_device == -1:
+                secondary_audio_device = settings.GetOption("device_default_out_index")
+
+        audio_tools.play_audio(wav, audio_device,
+                                source_sample_rate=source_sample_rate,
+                                audio_device_channel_num=audio_device_channel_num,
+                                target_channels=target_channels,
+                                is_mono=is_mono,
+                                dtype=dtype,
+                                secondary_device=secondary_audio_device, tag="tts")
     
     def predict(self, text):
-        print(self.get_plugin_setting("play_mode", "") == "")
+        print(self.get_plugin_setting("play_mode", "false") == "false")
         data = [
         settings.GetOption("tts_voice"),
         ]
-        if self.get_plugin_setting("play_mode", "") == "":
+        if self.get_plugin_setting("play_mode", "false") == "false":
             data.append(self.wav_path)
         else:
             data.append("dummy")
@@ -167,9 +186,9 @@ class TALQu3PROTTSPlugin(Plugins.Base):
 
             process_arguments = [self.TALQu_path, self.predict(t)]
             self.process = processmanager.run_process(process_arguments, env={})
-            time.sleep(5)
+            time.sleep(self.get_plugin_setting("wait_time", 5))
             print(self.process)
-            if len(processmanager.all_processes) > 2:
+            if len(processmanager.all_processes) > 3:
                 processmanager.cleanup_subprocesses()
     
     def stt(self, text, result_obj):
@@ -178,21 +197,30 @@ class TALQu3PROTTSPlugin(Plugins.Base):
             if audio_device is None or audio_device == -1:
                 audio_device = settings.GetOption("device_default_out_index")
             self.generate_tts(text.strip())
-            if isfile(self.wav_path):
+            if isfile(self.wav_path) and self.get_plugin_setting("play_mode", "false") == "false":
                 wav_numpy = audio_tools.load_wav_to_bytes(self.wav_path, target_sample_rate=self.target_sample_rate)
                 # Convert numpy array back to WAV bytes
                 with io.BytesIO() as byte_io:
                     soundfile.write(byte_io, wav_numpy, samplerate=self.target_sample_rate,
                                     format='WAV')  # Explicitly specify format
                     wav_bytes = byte_io.getvalue()
-                self.play_audio_on_device(byte_io.getvalue(), audio_device)
+                    self.play_audio_on_device(byte_io.getvalue(), audio_device,self.target_sample_rate)
         return
 
     def tts(self, text, device_index, websocket_connection=None, download=False):
         if self.is_enabled(False) and self.action_flag:
-            wav = self.generate_tts(text.strip())
-            if wav is not None:
-                self.play_audio_on_device(wav, device_index)
+            audio_device = settings.GetOption("device_out_index")
+            if audio_device is None or audio_device == -1:
+                audio_device = settings.GetOption("device_default_out_index")
+            self.generate_tts(text.strip())
+            if isfile(self.wav_path) and self.get_plugin_setting("play_mode", "false") == "false":
+                wav_numpy = audio_tools.load_wav_to_bytes(self.wav_path, target_sample_rate=self.target_sample_rate)
+                # Convert numpy array back to WAV bytes
+                with io.BytesIO() as byte_io:
+                    soundfile.write(byte_io, wav_numpy, samplerate=self.target_sample_rate,
+                                    format='WAV')  # Explicitly specify format
+                    wav_bytes = byte_io.getvalue()
+                    self.play_audio_on_device(byte_io.getvalue(), audio_device)
         return
     
     
