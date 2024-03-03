@@ -1,7 +1,7 @@
 # ============================================================
-# TALQu3PRO Text to Speech Plugin for Whispering Tiger
+# TALQu3 Text to Speech Plugin for Whispering Tiger
 # Version: 0.2.0
-# This plug-in works with TALQu3PRO.
+# This plug-in works with TALQu3.
 # TALQuPRO is available from the developer Haruqa's
 # FanBox or join HarupoLabo to get it.
 # ============================================================
