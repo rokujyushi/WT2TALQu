@@ -1,14 +1,14 @@
 # Whispering Tiger to TALQu3  
 
 TALQu3 Text to Speech Plugin for [Whispering Tiger](https://github.com/Sharrnah/whispering)  
-Version: 0.1.0  
+Version: 0.2.1  
 This plug-in works with TALQu3.  
 TALQuPRO is available from the developer Haruqa's  
 Available through [BOOTH](https://booth.pm/ja/items/2755336)(free), [FanBox](https://haruqa.fanbox.cc/)(paid) or by joining [Harupo Labo](https://haruqa.github.io/TALQu/community.html)(point system).
 
 
 [Whispering Tiger](https://github.com/Sharrnah/whispering)用のTALQu3PROによる音声合成プラグイン  
-バージョン: 0.1.0  
+バージョン: 0.2.1  
 このプラグインはTALQu3で動作します。  
 TALQuは、開発者のHaruqaさんの  
 [BOOTH](https://booth.pm/ja/items/2755336)(無料)、[FanBox](https://haruqa.fanbox.cc/)(有料)、[はるぽラボ](https://haruqa.github.io/TALQu/community.html)(ポイント制)から入手できます。  
