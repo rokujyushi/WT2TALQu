@@ -1,7 +1,7 @@
 # ============================================================
-# TALQu3 Text to Speech Plugin for Whispering Tiger
+# TALQu3PRO Text to Speech Plugin for Whispering Tiger
 # Version: 0.2.0
-# This plug-in works with TALQu3.
+# This plug-in works with TALQu3PRO.
 # TALQuPRO is available from the developer Haruqa's
 # FanBox or join HarupoLabo to get it.
 # ============================================================
@@ -34,8 +34,8 @@ class TALQu3PROTTSPlugin(Plugins.Base):
                 pass
     TALQu_path = ""
     action_flag = False
-    data = {}
     target_sample_rate = 48000
+    TALQu_process = []
 
     def init(self):
 
@@ -83,10 +83,11 @@ class TALQu3PROTTSPlugin(Plugins.Base):
             return
         pass
 
-    def outLog(self,str):
+    def outLog(self,str_):
         with open(self.log_path, 'a') as f:
         # ファイルにテキストを書き込む
-            f.write(str+"\n")
+            str_ = str_+"\n"
+            f.write(str_)
 
     def check_version(self):
         command = self.TALQu_path +" getVersion"
@@ -116,7 +117,7 @@ class TALQu3PROTTSPlugin(Plugins.Base):
             if len(names) >= 5:
                 websocket.BroadcastMessage(json.dumps({
                     "type": "available_tts_voices",
-                    "data": names[5].replace('TALQu3_Return:', '').split(',')
+                    "data": names[5].replace('TALQu_Return:', '').split(',')
                 }))
                 self.outLog(names[5])
         except subprocess.TimeoutExpired:
@@ -186,10 +187,10 @@ class TALQu3PROTTSPlugin(Plugins.Base):
 
             process_arguments = [self.TALQu_path, self.predict(t)]
             self.process = processmanager.run_process(process_arguments, env={})
+            process.append(self.process)
             time.sleep(self.get_plugin_setting("wait_time", 5))
-            print(self.process)
-            if len(processmanager.all_processes) > 3:
-                processmanager.cleanup_subprocesses()
+            if len(process) > 3:
+                processmanager.kill_process(process)
     
     def stt(self, text, result_obj):
         if self.is_enabled(False) and settings.GetOption("tts_answer") and text.strip() != "" and self.action_flag:
@@ -203,7 +204,6 @@ class TALQu3PROTTSPlugin(Plugins.Base):
                 with io.BytesIO() as byte_io:
                     soundfile.write(byte_io, wav_numpy, samplerate=self.target_sample_rate,
                                     format='WAV')  # Explicitly specify format
-                    wav_bytes = byte_io.getvalue()
                     self.play_audio_on_device(byte_io.getvalue(), audio_device,self.target_sample_rate)
         return
 
@@ -219,7 +219,6 @@ class TALQu3PROTTSPlugin(Plugins.Base):
                 with io.BytesIO() as byte_io:
                     soundfile.write(byte_io, wav_numpy, samplerate=self.target_sample_rate,
                                     format='WAV')  # Explicitly specify format
-                    wav_bytes = byte_io.getvalue()
                     self.play_audio_on_device(byte_io.getvalue(), audio_device)
         return
     
